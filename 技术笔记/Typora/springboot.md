@@ -196,19 +196,37 @@ spring:
 
 需要注意的是，一旦自行配置静态资源目录，官方配置将失效！但是META-INF/resources下的文件依然可以访问！
 
-###### (4)配置项目默认访问页
+###### (4)配置项目默认访问页（主页）
 
-项目默认访问页：只需要输入域名+项目名就可以访问的页面。比如：localhost:8080。localhost:8080，它的项目名是""。
+主页：只需要输入域名+项目名就可以访问的页面。比如：localhost:8080。localhost:8080，这里的项目名是""。
 
-+ 静态资源目录下 有index.html
++ 首先静态资源目录下得有index.html（主页），可以配置自定义静态资源目录，也可以配置静态资源访问前缀。但是配了前缀后，访问主页还得加前缀，这是不合适的。不加前缀访问主页的解决方法有两种：
 
-  可以配置静态资源目录
++ ~~~java
+  // 通过 Controller 进行重定向（最简单）
+  @Controller
+  public class IndexController {
+      @GetMapping("/")
+      public String index() {
+          return "redirect:/res/index.html"; // 重定向到带前缀的地址
+      }
+  }
+  ~~~
 
-  如果配置了静态资源访问前缀，则需要去掉前缀，否则不生效。
++ ~~~java
+  // 通过 WebMvcConfigurer 添加视图控制器（更简洁，无需额外方法）
+  @Configuration
+  public class WebConfig implements WebMvcConfigurer {
+      @Override
+      public void addViewControllers(ViewControllerRegistry registry) {
+          registry.addViewController("/").setViewName("forward:/res/index.html");
+      }
+  }
+  ~~~
 
-  在静态资源目录下添加文件favicon.ico可以当作页面的图标，但前提是没有配置静态资源访问前缀，并且浏览器还得刷新缓存且重新建立和网站的会话。
+###### (5)页面图标
 
-+ 或者Controller类有请求路径为/index的路径，然后该请求使用视图解析器导向访问页面。
+在静态资源目录下添加文件favicon.ico可以当作项目中所有页面的图标，但前提是没有配置静态资源访问前缀，并且浏览器还得刷新缓存，Windows/Linux下可用Ctrl + F5强制刷新。如果配置了静态资源访问前缀还想正常使用。要么通过 `WebMvcConfigurer` 手动为 `/favicon.ico` 添加映射，或者直接在HTML的 `<head>` 中通过 `<link rel="icon" href="/res/favicon.ico">` 显式指定路径。
 
 ##### 8.指标监控
 
